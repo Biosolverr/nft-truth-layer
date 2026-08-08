@@ -1,0 +1,20 @@
+{
+  "id": 2,
+  "claim": "This NFT belongs to the official CryptoAnimals collection.",
+  "claim_type": "COLLECTION_AUTHENTICITY",
+  "nft_contract": "0x9999999999999999999999999999999999999999",
+  "token_id": "9999",
+  "status": "UNDETERMINED",
+  "reason": "Conflicting sources: Official website shows contract 0x123... but marketplace lists contract 0x999... Collection name mismatch between sources.",
+  "evidence": [
+    {
+      "source": "https://cryptoanimals.example/collection",
+      "finding": "Collection name is CryptoAnimals, Contract address is 0x123..."
+    },
+    {
+      "source": "https://fake-marketplace.example/nft/9999",
+      "finding": "Collection name is FakeAnimals, Contract address is 0x999..."
+    }
+  ],
+  "timestamp": 1786100100
+}
