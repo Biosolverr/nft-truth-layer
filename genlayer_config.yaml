@@ -1,0 +1,37 @@
+project:
+  name: nft-truth-layer
+  version: 1.0.0
+  description: "Decentralized evidence and adjudication layer for NFT claims"
+
+network:
+  default: testnet-bradbury
+
+  testnet-bradbury:
+    name: "Bradbury Testnet"
+    rpc: "https://rpc.testnet-chain.genlayer.com"
+    chain_id: 4221
+    currency: "GEN"
+    explorer: "https://explorer.testnet-chain.genlayer.com"
+
+  studio:
+    name: "GenLayer Studio"
+    rpc: "http://localhost:8080"
+    chain_id: 1337
+    currency: "GEN"
+    explorer: null
+
+contracts:
+  main:
+    path: contracts/nft_verifier.py
+    name: NFTVerifier
+
+testing:
+  direct_mode: true
+  studio_mode: true
+  validators: 3
+
+  test_suites:
+    - tests/test_claims.py
+    - tests/test_consensus.py
+    - tests/test_web_evidence.py
+    - tests/test_image_verification.py
