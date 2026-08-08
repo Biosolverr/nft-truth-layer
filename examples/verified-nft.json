@@ -1,0 +1,24 @@
+{
+  "id": 1,
+  "claim": "This NFT belongs to the official CryptoAnimals collection and its image is consistent with its metadata.",
+  "claim_type": "COLLECTION_AUTHENTICITY",
+  "nft_contract": "0x1234567890abcdef1234567890abcdef12345678",
+  "token_id": "1847",
+  "status": "VERIFIED",
+  "reason": "Contract address matches official website. Collection is referenced on creator page. Token ID belongs to declared collection.",
+  "evidence": [
+    {
+      "source": "https://cryptoanimals.example/collection",
+      "finding": "Contract address 0x123... matches the NFT contract"
+    },
+    {
+      "source": "https://creator.example/portfolio",
+      "finding": "Collection CryptoAnimals is listed as official work"
+    },
+    {
+      "source": "nft_metadata",
+      "finding": "Token ID 1847 belongs to declared collection"
+    }
+  ],
+  "timestamp": 1786100000
+}
