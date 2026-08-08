@@ -1,0 +1,20 @@
+{
+  "id": 3,
+  "claim": "The NFT metadata accurately describes the image.",
+  "claim_type": "METADATA_CONSISTENCY",
+  "nft_contract": "0xabcdef1234567890abcdef1234567890abcdef12",
+  "token_id": "42",
+  "status": "REJECTED",
+  "reason": "Metadata describes 'golden tiger in forest' but image shows spaceship. Clear contradiction between metadata description and actual image content.",
+  "evidence": [
+    {
+      "source": "nft_metadata",
+      "finding": "Description: 'A golden tiger standing in a forest'"
+    },
+    {
+      "source": "image_analysis",
+      "finding": "Image depicts a spaceship in outer space, not a tiger or forest"
+    }
+  ],
+  "timestamp": 1786100200
+}
