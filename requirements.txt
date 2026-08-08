@@ -1,0 +1,21 @@
+# NFT Truth Layer - Python Dependencies
+
+# GenLayer SDK (required to write/deploy the Intelligent Contract)
+genlayer
+
+# GenLayer test framework (gltest) - runs contracts against localnet/studionet
+# with mocked LLM responses, real TreeMap/eq_principle semantics, etc.
+genlayer-test
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+
+# Utilities
+requests>=2.31.0
+python-dotenv>=1.0.0
+pyyaml>=6.0.1
+
+# Development
+black>=23.0.0
+flake8>=6.0.0
