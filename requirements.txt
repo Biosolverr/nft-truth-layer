@@ -1,10 +1,16 @@
 # NFT Truth Layer - Python Dependencies
 
-# GenLayer SDK (required to write/deploy the Intelligent Contract)
-genlayer
+# NOTE: there is no standalone pip-installable "genlayer" package for the
+# contract-side SDK (gl.Contract, TreeMap, u256, etc.) - that library only
+# exists inside the GenVM execution environment (Docker localnet / Studio /
+# testnet), resolved via the "# { Depends: py-genlayer:... }" header in the
+# contract file itself. Do NOT `pip install genlayer` - the package under
+# that name on PyPI is an unrelated placeholder, not the real SDK.
 
-# GenLayer test framework (gltest) - runs contracts against localnet/studionet
-# with mocked LLM responses, real TreeMap/eq_principle semantics, etc.
+# GenLayer test framework (gltest) - deploys/runs contracts against a real
+# GenVM sandbox (localnet or studionet) with mocked LLM responses, real
+# TreeMap/eq_principle semantics, etc. This is the only package you need
+# to actually run contracts/nft_verifier.py locally.
 genlayer-test
 
 # Testing
@@ -19,4 +25,3 @@ pyyaml>=6.0.1
 # Development
 black>=23.0.0
 flake8>=6.0.0
-
