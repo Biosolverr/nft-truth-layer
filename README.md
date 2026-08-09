@@ -187,7 +187,41 @@ genlayer studio
 
 ---
 
+## Test Data / Live Demo
+
+Test NFTs, evidence pages, and images used to exercise this contract live in a
+**separate** repository: [`TruthNFT-test-suite`](../../TruthNFT-test-suite)
+(different stack - Hardhat/Solidity + a static Vercel site - kept separate on
+purpose rather than merged into this repo).
+
+It provides 5 deliberately different test tokens (ERC-721 on Base Sepolia,
+metadata/evidence hosted on Vercel):
+
+| Token | Case | Expected verifier result |
+|---|---|---|
+| #1 | Honest baseline | VERIFIED |
+| #2 | Metadata/image contradiction | REJECTED |
+| #3 | Web evidence (official + creator pages agree) | VERIFIED |
+| #4 | Conflicting web evidence | UNDETERMINED |
+| #5 | Prompt-injection metadata | Must be treated as untrusted data |
+
+Once both are deployed:
+- TruthNFT contract address (Base Sepolia) + Vercel URL → link here
+- This contract's address (Bradbury Testnet) → link here
+
+Point this contract's `nft_contract`/`metadata`/`evidence_urls` inputs at the
+deployed TruthNFT tokens to reproduce all three statuses live.
+
 ## Testing
+
+### Pure-logic tests (no network, no genlayer runtime services)
+
+`test_pure_logic.py` tests deterministic helper methods directly (metadata parsing, LLM-output repair, claim-type validation). Only needs the `genlayer` package importable - no Docker, no localnet:
+
+```bash
+pip install genlayer
+pytest tests/test_pure_logic.py -v
+```
 
 ### Scenario specs (no network, no contract execution)
 
