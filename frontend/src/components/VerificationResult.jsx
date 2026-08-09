@@ -75,3 +75,4 @@ function VerificationResult({ result }) {
 }
 
 export default VerificationResult;
+
