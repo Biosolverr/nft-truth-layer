@@ -7,17 +7,63 @@ function NFTForm({ onSubmit, loading }) {
     nftContract: '',
     tokenId: '',
     evidenceUrls: '',
-    imageUrl: ''
+    imageUrl: '',
+    metadata: ''
   });
+
+  const [imageFile, setImageFile] = useState(null);
+  const [metadataError, setMetadataError] = useState(null);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    if (e.target.name === 'metadata') {
+      setMetadataError(null);
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    setImageFile(file);
+  };
+
+  const fileToBytes = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(new Uint8Array(reader.result));
+      reader.onerror = () => reject(new Error('Could not read the selected image file'));
+      reader.readAsArrayBuffer(file);
+    });
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Parse metadata JSON (optional field) before submitting - a claim
+    // like METADATA_CONSISTENCY is meaningless without valid metadata, so
+    // catch typos here rather than sending broken JSON on-chain.
+    let metadata = null;
+    if (form.metadata.trim()) {
+      try {
+        metadata = JSON.parse(form.metadata);
+      } catch (err) {
+        setMetadataError('Metadata must be valid JSON, e.g. {"name": "...", "collection": "..."}');
+        return;
+      }
+    }
+
+    let imageBytes = null;
+    if (imageFile) {
+      try {
+        imageBytes = await fileToBytes(imageFile);
+      } catch (err) {
+        setMetadataError(err.message);
+        return;
+      }
+    }
+
     onSubmit({
       ...form,
+      metadata,
+      imageBytes,
       evidenceUrls: form.evidenceUrls.split('\n').map(u => u.trim()).filter(u => u.length > 0)
     });
   };
@@ -28,6 +74,12 @@ function NFTForm({ onSubmit, loading }) {
     METADATA_CONSISTENCY: 'Check if metadata accurately describes the image',
     CUSTOM: 'Define your own claim to verify'
   };
+
+  // Metadata is relevant to every claim type as supporting evidence, but
+  // an image is only useful for VISUAL / METADATA_CONSISTENCY claims -
+  // still shown for CUSTOM/COLLECTION_AUTHENTICITY in case the user wants
+  // to attach one anyway.
+  const showImageUpload = ['VISUAL', 'METADATA_CONSISTENCY', 'CUSTOM'].includes(form.claimType);
 
   return (
     <div className="card">
@@ -88,6 +140,23 @@ function NFTForm({ onSubmit, loading }) {
         </div>
 
         <div className="form-group">
+          <label className="form-label">
+            NFT Metadata (JSON, optional)
+          </label>
+          <textarea
+            name="metadata"
+            value={form.metadata}
+            onChange={handleChange}
+            placeholder={'{\n  "name": "Golden Tiger #1847",\n  "description": "A golden tiger standing in a forest.",\n  "collection": "CryptoAnimals",\n  "attributes": [\n    { "trait_type": "species", "value": "Tiger" }\n  ]\n}'}
+            rows={6}
+            style={{ fontFamily: 'monospace', fontSize: 12 }}
+          />
+          {metadataError && (
+            <p style={{ color: '#ff6b6b', fontSize: 12, margin: '6px 0 0' }}>{metadataError}</p>
+          )}
+        </div>
+
+        <div className="form-group">
           <label className="form-label">Evidence URLs (one per line)</label>
           <textarea
             name="evidenceUrls"
@@ -107,6 +176,24 @@ function NFTForm({ onSubmit, loading }) {
             placeholder="https://ipfs.io/ipfs/Qm..."
           />
         </div>
+
+        {showImageUpload && (
+          <div className="form-group">
+            <label className="form-label">
+              Or upload an image directly (optional, sent to the LLM as raw bytes)
+            </label>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={handleImageChange}
+            />
+            {imageFile && (
+              <p style={{ fontSize: 12, color: '#8892b0', margin: '6px 0 0' }}>
+                {imageFile.name} ({Math.round(imageFile.size / 1024)} KB)
+              </p>
+            )}
+          </div>
+        )}
 
         <button type="submit" className="btn-primary" disabled={loading}>
           {loading ? (
