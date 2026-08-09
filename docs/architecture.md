@@ -1,5 +1,3 @@
-# NFT Truth Layer — Architecture
-
 ## Overview
 
 NFT Truth Layer is a decentralized evidence and adjudication layer for NFT claims, powered by GenLayer. It does not attempt to prove absolute real-world truth. Instead, it evaluates explicit claims against available evidence and records the consensus outcome on-chain.
@@ -223,3 +221,5 @@ Testnet Deployment
 - Raw image bytes
 - Detailed LLM reasoning
 - Full validator responses
+ploading architecture.md…]()
+
