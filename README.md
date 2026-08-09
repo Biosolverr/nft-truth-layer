@@ -104,12 +104,7 @@ nft-truth-layer/
 ├── contracts/
 │   └── nft_verifier.py              # GenLayer Intelligent Contract
 ├── tests/
-│   ├── conftest.py                  # Shared fixtures
-│   ├── test_claims.py               # Claim type tests (12 tests)
-│   ├── test_consensus.py            # Equivalence Principle tests (11 tests)
-│   ├── test_web_evidence.py         # Web evidence scenarios (spec-only, see note in file)
-│   ├── test_image_verification.py   # Image scenarios (spec-only, see note in file)
-│   └── test_nft_verifier_gltest.py  # Real contract execution tests via `gltest`
+│   └── test_nft_verifier_gltest.py  # Real contract execution tests via `gltest` (the only test file)
 ├── frontend/                         # React application
 │   ├── public/
 │   ├── src/
@@ -214,31 +209,15 @@ deployed TruthNFT tokens to reproduce all three statuses live.
 
 ## Testing
 
-### Pure-logic tests (no network, no genlayer runtime services)
-
-`test_pure_logic.py` tests deterministic helper methods directly (metadata parsing, LLM-output repair, claim-type validation). Only needs the `genlayer` package importable - no Docker, no localnet:
-
-```bash
-pip install genlayer
-pytest tests/test_pure_logic.py -v
-```
-
-### Scenario specs (no network, no contract execution)
-
-`test_claims.py`, `test_consensus.py`, `test_web_evidence.py`, `test_image_verification.py` assert on hardcoded scenario values and document intended behavior, but never import or execute `NFTVerifier`. Useful as a spec, not as proof the contract works:
-
-```bash
-pytest tests/test_claims.py tests/test_consensus.py tests/test_web_evidence.py tests/test_image_verification.py -v
-```
-
 ### Real contract tests (`gltest`)
 
-`test_nft_verifier_gltest.py` actually deploys `NFTVerifier` against mock GenLayer validators (via `genlayer-test`'s `MockedLLMResponse`) and calls `verify_claim`/`get_claim_types` for real:
+`test_nft_verifier_gltest.py` actually deploys `NFTVerifier` against mock GenLayer validators (via `genlayer-test`'s `MockedLLMResponse`) inside a real GenVM sandbox, and calls `verify_claim`/`get_claim_types` for real. This is the only test file in this repo, and the only supported way to test the contract locally - there is no standalone pip package for the contract-side `genlayer` SDK, so plain `pytest`-without-GenVM tests of contract code are not possible (see `requirements.txt`).
 
 ```bash
+pip install genlayer-test
 gltest --network localnet
 # or
-pytest tests/test_nft_verifier_gltest.py -v
+gltest --network studionet
 ```
 
 ### Studio Mode (Integration)
@@ -338,4 +317,5 @@ MIT
 
 ---
 
-**Built for GenLayer.** Blockchains prove ownership. NFT Truth Layer proves what can be established.
+**Built for GenLayer.** Blockchains prove ownership. NFT Truth Layer proves what can be established.[README.md](https://github.com/user-attachments/files/30868447/README.md)
+
