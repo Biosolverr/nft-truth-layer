@@ -77,7 +77,11 @@ def _call_verify(contract, ctx, **kwargs):
         kwargs.get("evidence_urls"),
         kwargs.get("custom_params"),
     ]
-    return contract.verify_claim(args=args, transaction_context=ctx).transact(transaction_context=ctx)
+    # transaction_context only ever goes on .transact() (or on deploy()) -
+    # never on the method call itself. Passing it to both, as an earlier
+    # version of this file did, raises:
+    #   TypeError: ...<lambda>() got an unexpected keyword argument 'transaction_context'
+    return contract.verify_claim(args=args).transact(transaction_context=ctx)
 
 
 # ---------------------------------------------------------------------------
@@ -230,14 +234,14 @@ def test_invalid_claim_type_short_circuits_before_any_llm_call():
 
 def test_get_claim_types_view_method():
     contract, ctx = _deploy(mock_response={})
-    claim_types = contract.get_claim_types(transaction_context=ctx).call(transaction_context=ctx)
+    claim_types = contract.get_claim_types().call()
     assert "COLLECTION_AUTHENTICITY" in claim_types
     assert "VISUAL" in claim_types
 
 
 def test_get_verification_not_found_returns_error_dict():
     contract, ctx = _deploy(mock_response={})
-    result = contract.get_verification(args=[999], transaction_context=ctx).call(transaction_context=ctx)
+    result = contract.get_verification(args=[999]).call()
     assert result == {"error": "Verification not found"}
 
 
@@ -254,8 +258,8 @@ def test_verification_count_and_all_verifications_increment_correctly():
     _call_verify(contract, ctx, claim="Claim A", claim_type="CUSTOM", metadata={"name": "A"})
     _call_verify(contract, ctx, claim="Claim B", claim_type="CUSTOM", metadata={"name": "B"})
 
-    count = contract.get_verification_count(transaction_context=ctx).call(transaction_context=ctx)
-    all_results = contract.get_all_verifications(transaction_context=ctx).call(transaction_context=ctx)
+    count = contract.get_verification_count().call()
+    all_results = contract.get_all_verifications().call()
 
     assert count == 2
     assert len(all_results) == 2
