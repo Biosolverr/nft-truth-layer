@@ -38,6 +38,7 @@ documented as incorrect for LLM calls and would never reach consensus.
 """
 
 import json
+import datetime
 from genlayer import *
 
 
@@ -124,7 +125,7 @@ class NFTVerifier(gl.Contract):
             "status": evaluation["status"],
             "reason": evaluation["reason"],
             "evidence": evaluation.get("evidence", []),
-            "timestamp": int(gl.block.timestamp),
+            "timestamp": int(datetime.datetime.now().timestamp()),
         }
 
         self.verifications[verification_id] = json.dumps(result, ensure_ascii=False)
