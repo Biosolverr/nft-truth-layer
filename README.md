@@ -184,13 +184,40 @@ genlayer studio
 
 ## Test Data / Live Demo
 
-Test NFTs, evidence pages, and images used to exercise this contract live in a
-**separate** repository: [`TruthNFT-test-suite`](../../TruthNFT-test-suite)
-(different stack - Hardhat/Solidity + a static Vercel site - kept separate on
-purpose rather than merged into this repo).
+Verified end-to-end on GenLayer Studio (studionet) against a real, independently
+verifiable NFT — Bored Ape Yacht Club #1685 (contract `0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D`,
+confirmed on [Etherscan](https://etherscan.io/nft/0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d/1685)).
+No fabricated addresses or evidence - metadata matches this token's real on-chain traits,
+and `evidence_urls` points at the real official site.
 
-It provides 5 deliberately different test tokens (ERC-721 on Base Sepolia,
-metadata/evidence hosted on Vercel):
+All three runs used a **live, non-mocked** validator set spanning multiple model providers
+(GPT-5.4, Claude Sonnet 4.6, Gemini, Grok, Qwen, Mistral, Gemma, Minimax, GPT-OSS) with
+real `gl.nondet.web.render()` fetches and real consensus voting (including leader rotation
+where validators disagreed) - not simulated/mocked responses.
+
+| # | Claim | Result | Tx hash |
+|---|---|---|---|
+| 1 | "This NFT belongs to the official Bored Ape Yacht Club collection." | `UNDETERMINED` | `0xcba9a7a63d384482bc292ce5d258925c5e7429a53237268a8f19d61122571033` |
+| 2 | "This NFT belongs to the official CryptoPunks collection." (same metadata/evidence as #1 - direct contradiction) | `REJECTED` | `0xd4dea6e564c659db09c20041bf7d3f2d28eea049036a999295545d401ba821f7` |
+| 3 | "This NFT belongs to an officially recognized collection." (no metadata, no evidence_urls) | `UNDETERMINED` | `0x43db5946e465ccabc9c67a259147aa578152e9fbbbdbbf320c151cec23c7c72a` |
+
+Run #1 is a genuinely honest UNDETERMINED, not a forced result: the official BAYC site
+confirms the collection exists but has no contract address or token-specific verification,
+and metadata alone is self-asserted - exactly the kind of insufficient-evidence case this
+contract is designed to flag rather than rubber-stamp as VERIFIED.
+
+Run #2 shows the contract catching a direct contradiction between claim and evidence even
+though the web-evidence extraction returned fewer facts than in run #1 (LLM extraction is
+non-deterministic) - the metadata alone was enough to reject the false claim.
+
+Reproduce this yourself: deploy `contracts/nft_verifier.py` on GenLayer Studio, then call
+`verify_claim` with the inputs above via Simulation Mode.
+
+### TruthNFT test fixture (separate repo)
+
+A separate repository, [`TruthNFT-test-suite`](../../TruthNFT-test-suite), provides 5
+purpose-built ERC-721 test tokens (Base Sepolia) with hosted metadata/evidence pages
+(Vercel) for demoing all three statuses without relying on a large real-world collection:
 
 | Token | Case | Expected verifier result |
 |---|---|---|
@@ -200,12 +227,7 @@ metadata/evidence hosted on Vercel):
 | #4 | Conflicting web evidence | UNDETERMINED |
 | #5 | Prompt-injection metadata | Must be treated as untrusted data |
 
-Once both are deployed:
-- TruthNFT contract address (Base Sepolia) + Vercel URL → link here
-- This contract's address (Bradbury Testnet) → link here
-
-Point this contract's `nft_contract`/`metadata`/`evidence_urls` inputs at the
-deployed TruthNFT tokens to reproduce all three statuses live.
+Once deployed: TruthNFT contract address (Base Sepolia) + Vercel URL → link here.
 
 ## Testing
 
