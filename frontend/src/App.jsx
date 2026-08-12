@@ -1,41 +1,133 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import NFTForm from './components/NFTForm';
 import VerificationResult from './components/VerificationResult';
-import { verifyClaimOnChain } from './utils/genlayerClient';
+import VerificationExplorer from './components/VerificationExplorer';
+import TransactionLog from './components/TransactionLog';
+import {
+  verifyClaimOnChain,
+  getAllVerifications,
+  getVerification,
+  getVerificationCount,
+  getClaimTypes,
+} from './utils/genlayerClient';
 import './App.css';
 
 function App() {
   const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [logs, setLogs] = useState([]);
 
+  // Global method lock: only one contract call (read OR write) may run at
+  // a time. `busyMethod` names which one, so the UI can show a specific
+  // "verify_claim is running" vs "get_all_verifications is running" message
+  // instead of just a generic spinner.
+  const [busyMethod, setBusyMethod] = useState(null);
+  const isBusy = busyMethod !== null;
+
+  const [claimTypes, setClaimTypes] = useState(null);
+  const [verificationCount, setVerificationCount] = useState(null);
+
+  // Guards against setState calls after the component unmounts mid-request
+  // (e.g. a 5-minute verify_claim consensus wait outliving a page navigation).
+  const mountedRef = useRef(true);
+  useEffect(() => () => { mountedRef.current = false; }, []);
+
+  const appendLog = useCallback((entry) => {
+    if (!mountedRef.current) return;
+    setLogs((prev) => [...prev, entry]);
+  }, []);
+
+  // ---------------------------------------------------------------------
+  // verify_claim (write)
+  // ---------------------------------------------------------------------
   const handleVerify = async (data) => {
-    setLoading(true);
+    if (isBusy) return; // extra guard on top of the disabled UI
+    setBusyMethod('verify_claim');
     setError(null);
     setResult(null);
 
     try {
-      // Real call: writes to the deployed NFTVerifier contract and waits
-      // for GenLayer validators to reach consensus (this can take a while
-      // for non-deterministic / LLM+web transactions - keep loading=true).
-      const { result: onChainResult } = await verifyClaimOnChain({
-        claim: data.claim,
-        claimType: data.claimType,
-        nftContract: data.nftContract || null,
-        tokenId: data.tokenId || null,
-        metadata: data.metadata || null,
-        imageUrl: data.imageUrl || null,
-        imageBytes: data.imageBytes || null,
-        evidenceUrls: data.evidenceUrls?.filter(Boolean) || null,
-      });
+      const { result: onChainResult } = await verifyClaimOnChain(
+        {
+          claim: data.claim,
+          claimType: data.claimType,
+          nftContract: data.nftContract || null,
+          tokenId: data.tokenId || null,
+          metadata: data.metadata || null,
+          imageUrl: data.imageUrl || null,
+          imageBytes: data.imageBytes || null,
+          evidenceUrls: data.evidenceUrls?.filter(Boolean) || null,
+        },
+        appendLog
+      );
 
+      if (!mountedRef.current) return;
       setResult(onChainResult);
+      // Keep the read-side summary in sync after a successful write.
+      refreshCount();
     } catch (err) {
+      if (!mountedRef.current) return;
       setError(err.message || 'Verification failed. Please try again.');
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setBusyMethod(null);
     }
   };
+
+  // ---------------------------------------------------------------------
+  // Read methods
+  // ---------------------------------------------------------------------
+  const refreshClaimTypes = useCallback(async () => {
+    if (isBusy) return;
+    setBusyMethod('get_claim_types');
+    try {
+      const types = await getClaimTypes(appendLog);
+      if (mountedRef.current) setClaimTypes(types);
+    } catch (err) {
+      if (mountedRef.current) setError(err.message);
+    } finally {
+      if (mountedRef.current) setBusyMethod(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBusy, appendLog]);
+
+  const refreshCount = useCallback(async () => {
+    if (isBusy) return;
+    setBusyMethod('get_verification_count');
+    try {
+      const count = await getVerificationCount(appendLog);
+      if (mountedRef.current) setVerificationCount(count);
+    } catch (err) {
+      if (mountedRef.current) setError(err.message);
+    } finally {
+      if (mountedRef.current) setBusyMethod(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isBusy, appendLog]);
+
+  const handleLoadAll = async () => {
+    setBusyMethod('get_all_verifications');
+    try {
+      return await getAllVerifications(appendLog);
+    } finally {
+      if (mountedRef.current) setBusyMethod(null);
+    }
+  };
+
+  const handleLoadById = async (verificationId) => {
+    setBusyMethod('get_verification');
+    try {
+      return await getVerification(verificationId, appendLog);
+    } finally {
+      if (mountedRef.current) setBusyMethod(null);
+    }
+  };
+
+  // Load claim types + count once on mount so the page isn't empty.
+  useEffect(() => {
+    refreshClaimTypes();
+    refreshCount();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="app-container">
@@ -55,7 +147,16 @@ function App() {
       </header>
 
       <main className="app-main">
-        <NFTForm onSubmit={handleVerify} loading={loading} />
+        {isBusy && (
+          <div className="loading-card">
+            <p>
+              <span className="loading-spinner"></span>
+              {busyMethod === 'verify_claim'
+                ? 'Waiting for GenLayer validator consensus... this can take several minutes because it involves real LLM and web-access calls.'
+                : `Running ${busyMethod}... other actions are locked until this finishes.`}
+            </p>
+          </div>
+        )}
 
         {error && (
           <div className="error-card">
@@ -63,13 +164,21 @@ function App() {
           </div>
         )}
 
-        {loading && (
-          <div className="loading-card">
-            <p>Waiting for GenLayer validator consensus... this can take longer than a normal transaction because it involves LLM and web-access calls.</p>
-          </div>
-        )}
+        <NFTForm onSubmit={handleVerify} loading={busyMethod === 'verify_claim'} disabled={isBusy && busyMethod !== 'verify_claim'} />
 
         {result && <VerificationResult result={result} />}
+
+        <VerificationExplorer
+          disabled={isBusy}
+          claimTypes={claimTypes}
+          verificationCount={verificationCount}
+          onLoadClaimTypes={refreshClaimTypes}
+          onLoadCount={refreshCount}
+          onLoadAll={handleLoadAll}
+          onLoadById={handleLoadById}
+        />
+
+        <TransactionLog entries={logs} />
       </main>
 
       <footer className="app-footer">
@@ -87,4 +196,3 @@ function App() {
 }
 
 export default App;
-
