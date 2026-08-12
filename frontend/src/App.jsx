@@ -87,7 +87,6 @@ function App() {
     } finally {
       if (mountedRef.current) setBusyMethod(null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isBusy, appendLog]);
 
   const refreshCount = useCallback(async () => {
@@ -101,7 +100,6 @@ function App() {
     } finally {
       if (mountedRef.current) setBusyMethod(null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isBusy, appendLog]);
 
   const handleLoadAll = async () => {
@@ -126,7 +124,6 @@ function App() {
   useEffect(() => {
     refreshClaimTypes();
     refreshCount();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
