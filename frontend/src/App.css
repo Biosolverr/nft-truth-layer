@@ -67,6 +67,98 @@
   padding: 40px 20px;
 }
 
+.app-main--wide {
+  max-width: 1120px;
+}
+
+/* Studio-style two-column layout: method list on the left, selected
+   method's form/output on the right. */
+.app-shell {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.method-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: #112240;
+  border: 1px solid #233554;
+  border-radius: 12px;
+  padding: 20px 14px;
+  position: sticky;
+  top: 20px;
+}
+
+.method-sidebar-group-label {
+  color: #8892b0;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 8px;
+  padding: 0 8px;
+}
+
+.method-sidebar-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #a8b2d1;
+  font-size: 13px;
+  font-family: monospace;
+  padding: 10px 12px;
+  margin-bottom: 2px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  word-break: break-word;
+}
+
+.method-sidebar-item:hover {
+  background: rgba(0, 212, 255, 0.08);
+  color: #ccd6f6;
+}
+
+.method-sidebar-item.active {
+  background: rgba(0, 212, 255, 0.12);
+  color: #00d4ff;
+  font-weight: 700;
+  box-shadow: inset 3px 0 0 #00d4ff;
+}
+
+.method-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (max-width: 800px) {
+  .app-shell {
+    flex-direction: column;
+  }
+  .method-sidebar {
+    width: 100%;
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 12px;
+  }
+  .method-sidebar-group-label {
+    width: 100%;
+  }
+  .method-sidebar-item {
+    width: auto;
+    flex: 1 1 auto;
+    text-align: center;
+  }
+}
+
 .app-footer {
   text-align: center;
   padding: 40px 20px;
